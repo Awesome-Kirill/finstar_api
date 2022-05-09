@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	apierror "finstar/internal/error"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
@@ -30,9 +31,9 @@ type Options struct {
 }
 
 type Repository interface {
-	Deposited(userId int, total float32) error
-	Transfer(userIdFrom int, userIdTo int, total float32) error
-	FindUser(userId int) (bool, error)
+	Deposited(ctx context.Context, userId int, total float32) error
+	Transfer(ctx context.Context, userIdFrom int, userIdTo int, total float32) error
+	FindUser(ctx context.Context, userId int) (bool, error)
 }
 
 func (h *HTTP) Deposit(context *gin.Context) {
@@ -46,7 +47,7 @@ func (h *HTTP) Deposit(context *gin.Context) {
 
 	}
 
-	ok, err := h.repository.FindUser(request.To)
+	ok, err := h.repository.FindUser(context.Request.Context(), request.To)
 	if err != nil {
 		log.Error().Err(err).Msg("find user error")
 		context.JSON(http.StatusInternalServerError, apierror.APIError{Message: err.Error()})
@@ -58,7 +59,7 @@ func (h *HTTP) Deposit(context *gin.Context) {
 		return
 	}
 
-	err = h.repository.Deposited(request.To, request.Total)
+	err = h.repository.Deposited(context.Request.Context(), request.To, request.Total)
 	if err != nil {
 		log.Error().Err(err).Msg("Deposited error")
 		context.JSON(http.StatusInternalServerError, apierror.APIError{Message: err.Error()})
@@ -79,7 +80,7 @@ func (h *HTTP) Transfer(context *gin.Context) {
 		return
 	}
 
-	ok, err := h.repository.FindUser(request.To)
+	ok, err := h.repository.FindUser(context.Request.Context(), request.To)
 	if err != nil {
 		log.Error().Err(err).Msg("find user error")
 		context.JSON(http.StatusInternalServerError, apierror.APIError{Message: err.Error()})
@@ -91,7 +92,7 @@ func (h *HTTP) Transfer(context *gin.Context) {
 		return
 	}
 
-	ok, errs := h.repository.FindUser(request.To)
+	ok, errs := h.repository.FindUser(context.Request.Context(), request.To)
 	if errs != nil {
 		log.Error().Err(err).Msg("find user error")
 		context.JSON(http.StatusInternalServerError, apierror.APIError{Message: err.Error()})
@@ -103,7 +104,7 @@ func (h *HTTP) Transfer(context *gin.Context) {
 		return
 	}
 
-	err = h.repository.Transfer(request.From, request.To, request.Total)
+	err = h.repository.Transfer(context.Request.Context(), request.From, request.To, request.Total)
 	if err != nil {
 		if err == apierror.LowBalance {
 			context.JSON(http.StatusBadRequest, apierror.APIError{Message: err.Error(), ExtCode: apierror.NotEnoughMoney})
