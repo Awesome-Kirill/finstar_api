@@ -2,62 +2,41 @@ package main
 
 import (
 	"context"
-	"database/sql"
+	"finstar/config"
+	"finstar/internal/data"
+	"finstar/internal/transport"
+	"github.com/jackc/pgx/v4"
+	_ "github.com/lib/pq"
+	"github.com/rs/zerolog"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
-
-	"github.com/kelseyhightower/envconfig"
-	_ "github.com/lib/pq"
-	"github.com/rs/zerolog"
-
-	"finstar/internal/data"
-	"finstar/internal/transport"
 )
-
-type Config struct {
-	//LogLevel     string `envconfig:"log_level" default:"debug"`
-	HttpAPI      string `envconfig:"http_api" default:":8000"`
-	PostgresConn string `envconfig:"pg_conn" default:"postgres://postgres:mysecretpassword@localhost/postgres?sslmode=disable&search_path=billing"`
-}
 
 func main() {
 	log := zerolog.New(os.Stdout).With().Timestamp().Logger()
-
-	var config Config
-	if err := envconfig.Process("", &config); err != nil {
-		log.Fatal().Err(err).Msg("failed while reading config")
-		return
-	}
-	/*
-		logLevel, err := zerolog.ParseLevel(config.LogLevel)
-		if err != nil {
-			log.Warn().Err(err)
-			logLevel = zerolog.InfoLevel
-		}
-
-
-		log = log.Level(logLevel)
-
-	*/
+	conf := config.Get()
 	log = log.With().Str("service", "finstar-api").Logger()
-
-	db, err := sql.Open("postgres", config.PostgresConn)
+	conn, err := pgx.Connect(context.Background(), conf.PostgresConn)
+	//db, err := sql.Open("postgres", config.PostgresConn)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed connection db")
 	}
-	if err = db.Ping(); err != nil {
+	if err = conn.Ping(context.Background()); err != nil {
 		log.Fatal().Err(err).Msg("failed ping db")
 		return
 	}
 
-	server := transport.NewHttp(transport.Options{
-		Addr:       config.HttpAPI,
-		Log:        log,
-		Repository: data.NewDbRepository(db),
-	})
+	// toDO
+	err = data.RunMigrations()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed up migrate")
+	}
+	log.Info().Msg("up migrate")
+
+	server := transport.NewHttp(log, data.NewDbRepository(conn))
 
 	go func() {
 		if err := server.Start(); err != http.ErrServerClosed {
@@ -78,7 +57,7 @@ func main() {
 		log.Error().Err(err).Msg("server stop error")
 	}
 	log.Info().Msg("serv stop")
-	err = db.Close()
+	err = conn.Close(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("db close error")
 	}

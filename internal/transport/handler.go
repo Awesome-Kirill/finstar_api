@@ -4,7 +4,6 @@ import (
 	"context"
 	apierror "finstar/internal/error"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"net/http"
 )
@@ -22,12 +21,6 @@ type DepositRequest struct {
 
 type SuccessResponse struct {
 	Success bool `json:"success"`
-}
-
-type Options struct {
-	Addr       string
-	Log        zerolog.Logger
-	Repository Repository
 }
 
 type Repository interface {

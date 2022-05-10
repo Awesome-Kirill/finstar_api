@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"finstar/config"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"net/http"
@@ -21,7 +22,7 @@ func (h *HTTP) Stop(ctx context.Context) error {
 	return h.srv.Shutdown(ctx)
 }
 
-func NewHttp(options Options) *HTTP {
+func NewHttp(log zerolog.Logger, repository Repository) *HTTP {
 	h := &HTTP{}
 	router := gin.Default()
 	api := router.Group("/api/v1")
@@ -30,11 +31,11 @@ func NewHttp(options Options) *HTTP {
 	api.POST("/user/transfer", h.Transfer)
 
 	h.srv = &http.Server{
-		Addr:    options.Addr,
+		Addr:    config.Get().HttpAPI,
 		Handler: router,
 	}
 
-	h.repository = options.Repository
-	h.log = options.Log
+	h.repository = repository
+	h.log = log
 	return h
 }
