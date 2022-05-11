@@ -1,5 +1,5 @@
 
-
+go build .\cmd\main.go
 
 Пополнить баланс
 
