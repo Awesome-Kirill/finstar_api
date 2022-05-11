@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
-	HttpAPI      string `envconfig:"http_api" default:":8000"`
-	PostgresConn string `envconfig:"pg_conn" default:"postgres://postgres:mysecretpassword@localhost/postgres?sslmode=disable"`
+	HttpAPI      string `envconfig:"HTTP_API" default:":8000"`
+	PostgresConn string `envconfig:"PG_CONN" default:"postgres://postgres:mysecretpassword@localhost/postgres?sslmode=disable"`
 }
 
 var config Config
