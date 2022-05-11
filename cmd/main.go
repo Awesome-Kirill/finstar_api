@@ -14,11 +14,14 @@ import (
 	"time"
 )
 
+const searchPath = "billing"
+
 func main() {
 	log := zerolog.New(os.Stdout).With().Timestamp().Logger()
 	conf := config.Get()
 	log = log.With().Str("service", "finstar-api").Logger()
-	conn, err := pgx.Connect(context.Background(), conf.PostgresConn)
+
+	conn, err := pgx.Connect(context.Background(), conf.PostgresConn+"&search_path="+searchPath)
 	//db, err := sql.Open("postgres", config.PostgresConn)
 
 	if err != nil {

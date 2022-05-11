@@ -7,10 +7,8 @@ import (
 )
 
 type Config struct {
-	//LogLevel     string `envconfig:"log_level" default:"debug"`
 	HttpAPI      string `envconfig:"http_api" default:":8000"`
-	PostgresConn string `envconfig:"pg_conn" default:"postgres://postgres:mysecretpassword@localhost/postgres?sslmode=disable&search_path=billing"`
-	ConnMig      string `envconfig:"pg_conn" default:"postgres://postgres:mysecretpassword@localhost/postgres?sslmode=disable"`
+	PostgresConn string `envconfig:"pg_conn" default:"postgres://postgres:mysecretpassword@localhost/postgres?sslmode=disable"`
 }
 
 var config Config

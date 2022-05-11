@@ -29,11 +29,7 @@ func TestDeposit(t *testing.T) {
 	repository.EXPECT().FindUser(context.TODO(), 1).Return(true, nil)
 	repository.EXPECT().Deposited(context.TODO(), 1, float32(2.0)).Return(nil)
 
-	h := transport.NewHttp(transport.Options{
-		Addr:       ":8080",
-		Log:        log,
-		Repository: repository,
-	})
+	h := transport.NewHttp(log, repository)
 	r.POST("/user/deposit", h.Deposit)
 	var body = []byte(`{"to" : 1,"total" : 2}`)
 	req, err := http.NewRequest(http.MethodPost, "/user/deposit", bytes.NewBuffer(body))
